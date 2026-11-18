@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智裁明镜 · 大模型辅助劳动仲裁决策系统 | 项目资料</title>
+<meta name="description" content="智裁明镜——大模型辅助劳动仲裁决策系统，项目设计、交互与人机协同链路的完整说明。">
+<style>
+  :root{
+    --ink:#16222c;
+    --ink-2:#4d5c68;
+    --ink-3:#7d8994;
+    --paper:#f7f4ed;
+    --paper-2:#efeade;
+    --card:#fffdf8;
+    --line:#ddd5c5;
+    --line-2:#ebe5d8;
+    --red:#a8342a;
+    --blue:#1f4a70;
+    --teal:#2f6b60;
+    --amber:#b07a1e;
+    --shadow:0 1px 1px rgba(20,30,40,.03), 0 18px 40px -32px rgba(20,30,40,.45);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:#e8d9b8}
+  .serif{font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC","SimSun",serif}
+
+  /* ---------- 顶部进度 ---------- */
+  #prog{position:fixed;top:0;left:0;height:2px;width:0;background:var(--red);z-index:60;transition:width .1s linear}
+
+  /* ---------- 导航 ---------- */
+  header.nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(247,244,237,.88);
+    backdrop-filter:saturate(180%) blur(12px);
+    -webkit-backdrop-filter:saturate(180%) blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-in{max-width:1120px;margin:0 auto;padding:0 28px;height:58px;display:flex;align-items:center;gap:24px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+  .brand i{display:inline-block;width:15px;height:15px;border:1.6px solid var(--red);border-radius:50%;position:relative}
+  .brand i::after{content:"";position:absolute;inset:3.5px;background:var(--red);border-radius:50%}
+  .nav-links{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-left:auto}
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-links a{
+    color:var(--ink-2);text-decoration:none;font-size:13.5px;padding:6px 11px;border-radius:5px;white-space:nowrap;
+    transition:.18s;
+  }
+  .nav-links a:hover{color:var(--ink);background:var(--paper-2)}
+
+  /* ---------- 容器 ---------- */
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+  section{padding:84px 0 8px;scroll-margin-top:74px}
+  .sec-label{
+    display:flex;align-items:baseline;gap:12px;margin-bottom:22px;
+    font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);
+  }
+  .sec-label b{font-weight:600;color:var(--red);letter-spacing:.1em;font-variant-numeric:tabular-nums}
+  .sec-label::after{content:"";flex:1;height:1px;background:var(--line-2);transform:translateY(-4px)}
+  h2{
+    font-size:clamp(26px,3.4vw,36px);line-height:1.35;margin:0 0 14px;font-weight:600;letter-spacing:-.01em;
+  }
+  h3{font-size:17px;margin:0 0 8px;font-weight:650;letter-spacing:.01em}
+  p{margin:0 0 14px}
+  .lead{font-size:16.5px;color:var(--ink-2);max-width:62ch}
+  .muted{color:var(--ink-3);font-size:13.5px}
+  em.hl{font-style:normal;background:linear-gradient(transparent 62%, #f0dcae 62%);padding:0 1px}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:74px 0 26px;position:relative;overflow:hidden}
+  .hero::before{
+    content:"";position:absolute;right:-120px;top:-90px;width:520px;height:520px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, rgba(168,52,42,.09), rgba(168,52,42,0) 65%);
+    pointer-events:none;
+  }
+  .kicker{font-size:12px;letter-spacing:.2em;color:var(--ink-3);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .kicker span.dot{width:5px;height:5px;border-radius:50%;background:var(--red);display:inline-block}
+  h1{
+    font-size:clamp(46px,8vw,86px);line-height:1.02;margin:0;font-weight:500;letter-spacing:.06em;
+  }
+  .h1-en{font-size:12px;letter-spacing:.36em;color:var(--red);text-transform:uppercase;margin:16px 0 22px}
+  .hero-sub{font-size:clamp(19px,2.4vw,25px);font-weight:500;margin:0 0 18px;letter-spacing:.01em}
+  .hero-lead{font-size:16.5px;color:var(--ink-2);max-width:58ch;line-height:1.85}
+  .hero-meta{
+    display:flex;flex-wrap:wrap;gap:0;margin:34px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  }
+  .hero-meta div{flex:1 1 180px;padding:16px 20px 16px 0;border-right:1px solid var(--line-2)}
+  .hero-meta div:last-child{border-right:0}
+  .hero-meta dt{font-size:11px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin-bottom:5px}
+  .hero-meta dd{margin:0;font-size:14.5px;font-weight:550;line-height:1.55}
+
+  /* ---------- 公共卡片 ---------- */
+  .grid{display:grid;gap:16px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:8px;padding:22px 22px 20px;
+    box-shadow:var(--shadow);
+  }
+  .card p:last-child{margin-bottom:0}
+  .card .num{
+    font-size:12px;letter-spacing:.14em;color:var(--red);font-weight:600;margin-bottom:12px;display:block;
+  }
+  .tag{
+    display:inline-block;font-size:11.5px;letter-spacing:.04em;padding:2px 8px;border-radius:3px;
+    background:var(--paper-2);color:var(--ink-2);border:1px solid var(--line-2);margin:0 6px 6px 0;
+  }
+  .tag.red{background:#fbeeea;border-color:#f0d5cd;color:var(--red)}
+  .tag.blue{background:#eaf1f6;border-color:#d3e2ec;color:var(--blue)}
+  .tag.teal{background:#e9f1ef;border-color:#d2e3df;color:var(--teal)}
+
+  /* 约束条 */
+  .constraint{
+    margin-top:16px;background:linear-gradient(180deg,#fffaf0,#fdf6e8);border:1px solid #ecdfc2;border-radius:8px;
+    padding:18px 22px;display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;
+  }
+  .constraint b{color:var(--amber);white-space:nowrap;font-size:13px;letter-spacing:.06em}
+  .constraint p{margin:0;color:var(--ink-2);font-size:14.5px;flex:1 1 320px}
+
+  /* ---------- 设计原则 ---------- */
+  .principles{margin-top:26px;border-top:1px solid var(--line)}
+  .pr{
+    display:grid;grid-template-columns:64px 1fr 300px;gap:24px;padding:26px 0;border-bottom:1px solid var(--line-2);
+    align-items:start;
+  }
+  .pr-n{font-family:Georgia,serif;font-size:30px;color:var(--line);line-height:1;padding-top:2px}
+  .pr h3{font-size:18.5px;margin-bottom:7px}
+  .pr p{margin:0;color:var(--ink-2);font-size:15px}
+  .pr-note{font-size:13.5px;color:var(--ink-3);border-left:2px solid var(--red);padding-left:12px;line-height:1.7}
+
+  /* ---------- 流程 ---------- */
+  .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:30px;border-top:2px solid var(--ink);}
+  .step{padding:20px 18px 24px 0;border-right:1px solid var(--line-2);position:relative}
+  .step:last-child{border-right:0}
+  .step::before{
+    content:"";position:absolute;top:-6px;left:0;width:9px;height:9px;background:var(--paper);border:2px solid var(--ink);border-radius:50%;
+  }
+  .step .st{font-size:11px;letter-spacing:.16em;color:var(--ink-3);margin-bottom:8px}
+  .step h4{font-size:15.5px;margin:0 0 9px;font-weight:650}
+  .step p{font-size:13.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.7}
+  .step .why{font-size:12.5px;color:var(--red);line-height:1.6;border-top:1px dashed var(--line);padding-top:9px}
+
+  /* ---------- 线框 ---------- */
+  .wf{
+    background:#fff;border:1px solid var(--line);border-radius:7px;overflow:hidden;
+    box-shadow:0 1px 1px rgba(20,30,40,.03),0 22px 44px -36px rgba(20,30,40,.5);
+  }
+  .wf-top{display:flex;align-items:center;gap:6px;padding:8px 11px;background:#faf7f0;border-bottom:1px solid var(--line-2)}
+  .wf-top i{width:6px;height:6px;border-radius:50%;background:#d8d1c2}
+  .wf-top span{margin-left:8px;font-size:11px;color:var(--ink-3);letter-spacing:.06em}
+  .wf-body{display:flex;min-height:250px;font-size:11px;color:var(--ink-3)}
+  .pane{padding:12px;border-right:1px solid var(--line-2);overflow:hidden}
+  .pane:last-child{border-right:0}
+  .pane-h{font-size:10px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;margin-bottom:10px;white-space:nowrap}
+  .ln{height:6px;border-radius:3px;background:#eae4d7;margin-bottom:7px}
+  .ln.s{width:62%}.ln.m{width:82%}
+  .ln.hl{background:#f2dca9}
+  .row{display:flex;gap:6px;align-items:center;margin-bottom:7px}
+  .tick{width:8px;height:8px;border:1px solid #cfc6b3;border-radius:2px;flex:0 0 auto}
+  .bubble{background:#f4f1e7;border:1px solid #e7e0cf;border-radius:6px;padding:7px 9px;margin-bottom:8px;font-size:10.5px;line-height:1.55;color:var(--ink-2)}
+  .bubble.ai{background:#eef4f8;border-color:#d8e5ee;color:#24425c}
+  .chip{display:inline-block;font-size:9.5px;padding:1px 5px;border-radius:2px;background:#fff;border:1px solid #dcd4c2;color:var(--ink-2);margin:0 3px 3px 0}
+  .chip.r{background:#fbeae6;border-color:#eecfc7;color:var(--red)}
+  .chip.b{background:#e9f1f7;border-color:#cfdfeb;color:var(--blue)}
+
+  /* 矩阵 */
+  table.mx{width:100%;border-collapse:collapse;font-size:10.5px;table-layout:fixed}
+  table.mx th{font-weight:500;color:var(--ink-3);font-size:9.5px;padding:4px 3px;border-bottom:1px solid var(--line-2);text-align:center;line-height:1.3}
+  table.mx th:first-child{text-align:left;width:34%}
+  table.mx td{border:1px solid #efe9db;padding:0;height:24px;text-align:center;font-size:9px;color:var(--ink-3)}
+  td.ok{background:#e7f0ec;color:#2f6b60}
+  td.bad{background:#fbe7e2;color:#a8342a;font-weight:700}
+  td.na{background:#f6f3ec;color:#b6ae9d}
+  td.focus{outline:1.5px solid #a8342a;outline-offset:-1.5px}
+
+  /* 分块采纳 */
+  .blk{display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border:1px solid #eee7d8;border-radius:5px;margin-bottom:6px;background:#fcfaf4}
+  .blk .no{font-size:9px;color:var(--ink-3);padding-top:2px;width:12px;flex:0 0 auto}
+  .blk .txt{flex:1;min-width:0}
+  .blk .acts{display:flex;gap:3px;flex:0 0 auto}
+  .blk .acts i{width:15px;height:15px;border-radius:3px;background:#ece6d7;display:block}
+  .blk.done{background:#eef4f1;border-color:#d9e6e1}
+  .blk .src{font-size:8.5px;color:var(--red);border:1px solid #ecd6d1;background:#fdf3f0;border-radius:2px;padding:0 3px;margin-left:3px}
+
+  /* 交互块布局 */
+  .ix{display:grid;grid-template-columns:1.05fr .95fr;gap:34px;align-items:start;padding:34px 0;border-bottom:1px solid var(--line-2)}
+  .ix:last-child{border-bottom:0}
+  .ix-txt h3{font-size:19px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .ix-txt h3 span{font-size:11px;letter-spacing:.14em;color:var(--red);font-weight:500}
+  .qa{margin:14px 0 0;font-size:14.5px;line-height:1.8;color:var(--ink-2)}
+  .qa b{color:var(--ink);font-weight:600}
+  .qa .q{color:var(--red);font-weight:600;letter-spacing:.04em;display:inline-block;margin-right:4px}
+
+  /* 佐证时间线 */
+  .tl{position:relative;margin:30px 0 0;padding-left:26px;border-left:1px solid var(--line)}
+  .tl-item{position:relative;padding:0 0 26px 0}
+  .tl-item::before{content:"";position:absolute;left:-31px;top:8px;width:9px;height:9px;border-radius:50%;background:var(--paper);border:2px solid var(--line)}
+  .tl-item.key::before{background:var(--red);border-color:var(--red)}
+  .tl-date{font-size:12px;letter-spacing:.1em;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .tl-item h4{margin:3px 0 4px;font-size:15.5px;font-weight:650}
+  .tl-item p{margin:0;font-size:14px;color:var(--ink-2)}
+  .tl-item a{color:var(--blue);text-decoration:none;border-bottom:1px solid #cddbe6;font-size:13px}
+
+  /* 引用 */
+  .quote{
+    margin:34px 0 0;padding:30px 34px;background:var(--ink);color:#f2ede2;border-radius:9px;position:relative;overflow:hidden;
+  }
+  .quote::before{
+    content:"“";position:absolute;right:18px;top:-28px;font-family:Georgia,serif;font-size:170px;color:rgba(255,255,255,.06);line-height:1;
+  }
+  .quote p{font-size:16.5px;line-height:1.9;margin:0 0 12px;max-width:76ch}
+  .quote .by{font-size:12px;letter-spacing:.16em;color:#b9c3cb;text-transform:uppercase}
+
+  /* 工作四条线 */
+  .works{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:24px}
+  .work{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:6px;padding:20px 22px}
+  .work:nth-child(1){border-left-color:var(--blue)}
+  .work:nth-child(2){border-left-color:var(--teal)}
+  .work:nth-child(3){border-left-color:var(--amber)}
+  .work:nth-child(4){border-left-color:var(--red)}
+  .work h4{margin:0 0 4px;font-size:15px;letter-spacing:.04em}
+  .work .role{font-size:11px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;margin-bottom:10px}
+  .work ul{margin:0;padding-left:16px}
+  .work li{font-size:13.8px;color:var(--ink-2);line-height:1.72;margin-bottom:5px}
+
+  /* 证据截图墙 */
+  .proof{display:grid;grid-template-columns:1fr;gap:16px;max-width:920px}
+  .proof figure{margin:0;background:#fff;border:1px solid var(--line);border-radius:7px;overflow:hidden;box-shadow:var(--shadow)}
+  .proof img{display:block;width:100%;height:auto;border-bottom:1px solid var(--line-2);background:#faf8f3}
+  .proof figcaption{padding:12px 15px 14px;font-size:12.5px;line-height:1.68;color:var(--ink-2)}
+  .proof figcaption b{display:block;font-size:13px;color:var(--ink);margin-bottom:5px;font-weight:600;line-height:1.5}
+  .proof figcaption span{color:var(--ink-3);font-size:11.5px}
+  .proof figcaption a{color:var(--blue);text-decoration:none;border-bottom:1px solid #cddbe6}
+
+  /* 页脚 */
+  footer{margin-top:90px;border-top:1px solid var(--line);background:var(--paper-2);padding:44px 0 54px}
+  .foot-in{display:flex;justify-content:space-between;gap:28px;flex-wrap:wrap;align-items:flex-end}
+  .foot-in .name{font-size:22px;letter-spacing:.12em;font-weight:500}
+  .foot-in .sub{font-size:12.5px;color:var(--ink-3);letter-spacing:.1em;margin-top:6px}
+  .contact{font-size:13.5px;line-height:2;color:var(--ink-2);text-align:right}
+  .contact b{color:var(--ink);font-weight:600}
+  .disclaim{margin-top:26px;font-size:11.5px;color:#9a9384;line-height:1.8;border-top:1px dashed var(--line);padding-top:16px}
+
+  /* 动画 */
+  .rv{opacity:0;transform:translateY(14px);transition:opacity .7s cubic-bezier(.2,.7,.3,1),transform .7s cubic-bezier(.2,.7,.3,1)}
+  .rv.in{opacity:1;transform:none}
+
+  @media (max-width:900px){
+    .g3,.g4,.g2,.works{grid-template-columns:1fr}
+    .pr{grid-template-columns:40px 1fr;gap:14px}
+    .pr-note{grid-column:2;border-left:2px solid var(--red);margin-top:8px}
+    .flow{grid-template-columns:1fr;border-top:0}
+    .step{border-right:0;border-top:1px solid var(--line-2);padding:18px 0 18px 0}
+    .step::before{top:-5px}
+    .ix{grid-template-columns:1fr;gap:20px}
+    .ix-txt{order:-1}
+    .wf-body{min-height:210px}
+    .nav-links a{padding:6px 8px;font-size:12.5px}
+    section{padding:60px 0 4px}
+    .hero{padding:46px 0 18px}
+    .contact{text-align:left}
+    .hero-meta div{flex:1 1 100%;border-right:0;border-bottom:1px solid var(--line-2);padding:13px 0}
+    .hero-meta div:last-child{border-bottom:0}
+  }
+  @media (max-width:420px){
+    .wrap,.nav-in{padding:0 18px}
+    .wf-body{font-size:10px}
+    .pane{padding:9px}
+  }
+  @media print{
+    header.nav,#prog{display:none}
+    body{
+      background:#fff;font-size:11.5px;line-height:1.6;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    }
+    .wrap{max-width:none;padding:0}
+    section{padding:16px 0 2px;page-break-inside:auto;scroll-margin-top:0}
+    .sec-label{page-break-after:avoid}
+    h2{page-break-after:avoid}
+    .hero{padding:0 0 8px}
+    h1{font-size:40px}
+    h2{font-size:19px;margin-bottom:7px}
+    .rv{opacity:1 !important;transform:none !important}
+    .card,.wf,.quote,.work,.constraint,.tl-item,.step,.pr{page-break-inside:avoid;box-shadow:none}
+    .grid,.flow,.works,.ix{page-break-inside:avoid}
+    .card{padding:12px 14px}
+    .card .num{margin-bottom:7px}
+    .pr{padding:12px 0;grid-template-columns:36px 1fr 190px;gap:16px}
+    .pr-n{font-size:24px}
+    .ix{padding:14px 0;gap:12px;grid-template-columns:1fr}
+    .ix-txt{order:-1}
+    .wf{width:100%;page-break-inside:avoid}
+    .wf-body{min-height:0}
+    .pane-h{font-size:9px}
+    .principles{margin-top:10px}
+    .lead{font-size:12px;margin-bottom:10px}
+    .hero-meta{margin-top:18px;display:flex}
+    .hero-meta div{flex:1 1 25%;border-right:1px solid var(--line-2);border-bottom:0;padding:10px 12px 10px 0}
+    .hero-meta dd{font-size:12px}
+    .hero-lead{font-size:12.5px}
+    .hero-sub{font-size:17px;margin-bottom:10px}
+    .h1-en{margin:10px 0 14px}
+    .g3,.g4{grid-template-columns:repeat(3,1fr)}
+    .g2,.works{grid-template-columns:repeat(2,1fr)}
+    .proof{grid-template-columns:1fr;gap:10px;max-width:none}
+    .proof figcaption{font-size:9px;padding:8px 10px}
+    .proof figcaption b{font-size:9.5px}
+    .proof figure{page-break-inside:avoid;box-shadow:none}
+    .flow{grid-template-columns:repeat(5,1fr);border-top:2px solid var(--ink);margin-top:16px}
+    .step{border-right:1px solid var(--line-2);border-top:0;padding:12px 10px 14px 0}
+    .step p{font-size:10.5px}
+    .step h4{font-size:12.5px}
+    .step .why{font-size:9.5px}
+    .step .st{font-size:9px;margin-bottom:5px}
+    .wf-body{min-height:200px}
+    .cp,.muted{font-size:10.5px}
+    .qa{font-size:12px;line-height:1.7}
+    .ix-txt h3{font-size:15px}
+    .work{padding:14px 16px}
+    .work li{font-size:11.5px;line-height:1.6}
+    .work h4{font-size:13px}
+    .tl{padding-left:20px;margin-top:16px}
+    .tl-item{padding-bottom:12px}
+    .quote{padding:18px 22px;margin-top:18px}
+    .quote p{font-size:13px;line-height:1.75}
+    footer{margin-top:26px;padding:20px 0 26px}
+    .foot-in .name{font-size:18px}
+    .disclaim{font-size:9px;margin-top:14px;padding-top:10px}
+    @page{size:A4;margin:12mm 11mm}
+  }
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<header class="nav">
+  <div class="nav-in">
+    <div class="brand"><i></i>智裁明镜</div>
+    <nav class="nav-links">
+      <a href="#bg">背景</a>
+      <a href="#principle">设计原则</a>
+      <a href="#flow">主流程</a>
+      <a href="#interaction">关键交互</a>
+      <a href="#build">我做了什么</a>
+      <a href="#proof">落地佐证</a>
+      <a href="#transfer">范式迁移</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<div class="hero wrap">
+  <div class="kicker"><span class="dot"></span>项目资料<span style="color:#cfc7b6">/</span>2024.06 — 2025.06<span style="color:#cfc7b6">/</span>昆山</div>
+  <h1 class="serif">智裁明镜</h1>
+  <div class="h1-en">AI-Assisted Labor Arbitration Decision System</div>
+  <p class="hero-sub">大模型辅助劳动仲裁决策系统 · 全流程智能辅助办案</p>
+  <p class="hero-lead">
+    把仲裁员最耗时的三件事——翻卷宗、找法条、写裁决——压缩成一条<em class="hl">每一步都能回溯到原文</em>的人机协同链路。
+    AI 负责把非结构化卷宗变成结构化的候选结论，人负责判断与署名。
+  </p>
+
+  <dl class="hero-meta">
+    <div><dt>合作单位</dt><dd>昆山市周市镇人民政府<br>苏州科技大学 虚拟现实实验室</dd></div>
+    <div><dt>我的角色</dt><dd>全栈开发<br>前端 / 后端 / 数据清洗 / 模型训练</dd></div>
+    <div><dt>系统形态</dt><dd>B/S 政务内网系统<br>仲裁员 / 书记员 / 管理员三类角色</dd></div>
+    <div><dt>公开佐证</dt><dd>联合申请发明专利<br>2025 全国赛二等奖</dd></div>
+  </dl>
+</div>
+
+<!-- ============ 背景 ============ -->
+<section id="bg" class="wrap">
+  <div class="sec-label"><b>01</b>问题定义</div>
+  <h2 class="serif">先看清楚：这个系统真正的对手不是"效率"，是信任</h2>
+  <p class="lead">
+    劳动仲裁案件量逐年攀升，而仲裁流程高度依赖人工。表面看是慢，拆开看是三个具体的卡点——而这三个卡点，
+    恰好对应三种不同的产品解法。
+  </p>
+
+  <div class="grid g3" style="margin-top:26px">
+    <div class="card rv">
+      <span class="num">瓶颈 01</span>
+      <h3>经验依赖，标准难一</h3>
+      <p>裁决结果过度依赖仲裁员个人经验，同一类争议在不同仲裁员手里可能走出不同结论，"同案不同裁"直接损伤公信力。</p>
+      <p class="muted">→ 产品解法：把"经验"沉淀成可检索的类案与法条依据，让结论有出处。</p>
+    </div>
+    <div class="card rv">
+      <span class="num">瓶颈 02</span>
+      <h3>心证黑箱，事实主观</h3>
+      <p>事实采信过程存在于仲裁员内心，卷宗里"谁说了什么、哪份证据支持"没有结构化沉淀，事后复核几乎无从下手。</p>
+      <p class="muted">→ 产品解法：把事实与证据做成可碰撞、可标红的矩阵，让心证外化。</p>
+    </div>
+    <div class="card rv">
+      <span class="num">瓶颈 03</span>
+      <h3>检索低效，耗时冗长</h3>
+      <p>法规、司法解释、指导案例、地方裁审口径分散在多个系统，人工逐条比对如同大海捞针，且极易漏检。</p>
+      <p class="muted">→ 产品解法：混合检索 + 效力加权 + 重排，把"找"变成"推"。</p>
+    </div>
+  </div>
+
+  <div class="constraint rv">
+    <b>真实约束<br>不能忽略</b>
+    <p>
+      这是政务内网系统：<b>数据不出内网</b>、模型需本地化部署；使用者是<b>四五十岁的仲裁员</b>，不是技术用户；
+      一次错误结论的代价远高于多花十分钟。所以这套系统的设计目标从来不是"自动化裁决"，而是
+      <b>"让 AI 的每一步中间态都被人看见、被人否决"</b>。
+    </p>
+  </div>
+</section>
+
+<!-- ============ 设计原则 ============ -->
+<section id="principle" class="wrap">
+  <div class="sec-label"><b>02</b>设计原则</div>
+  <h2 class="serif">四条原则，决定了后面所有界面长什么样</h2>
+  <p class="lead">
+    在动手画第一个页面之前，我先给自己定了四条不可让渡的约束。它们是判断"某个交互该不该做"的唯一标准。
+  </p>
+
+  <div class="principles">
+    <div class="pr rv">
+      <div class="pr-n serif">01</div>
+      <div>
+        <h3>AI 只出"候选"，人做"决定"</h3>
+        <p>系统里没有"生成裁决书"这个按钮，只有"生成裁决建议"。所有 AI 产出的内容默认处于"待确认"状态，界面上不出现"完成""已裁决"这类词。</p>
+      </div>
+      <div class="pr-note">责任边界必须写进文案里。按钮叫什么，用户就会以为什么。</div>
+    </div>
+
+    <div class="pr rv">
+      <div class="pr-n serif">02</div>
+      <div>
+        <h3>每一个结论，都能一键回到原文</h3>
+        <p>裁决理由里的每句话都挂着来源角标，点一下直接跳到卷宗对应页码并高亮原句。没有出处的句子，不允许进入草案。</p>
+      </div>
+      <div class="pr-note">可追溯不是附加功能，是这类系统能被使用的前提。</div>
+    </div>
+
+    <div class="pr rv">
+      <div class="pr-n serif">03</div>
+      <div>
+        <h3>把黑箱拆成看得见的中间态</h3>
+        <p>要素、事实、证据、法条四个中间产物全部显式呈现、可编辑、可删除。用户能改的中间态越多，对最终结果的信任就越高。</p>
+      </div>
+      <div class="pr-note">不展示过程的"智能"，在专业场景里等于不可用。</div>
+    </div>
+
+    <div class="pr rv">
+      <div class="pr-n serif">04</div>
+      <div>
+        <h3>交互次数守恒：高频动作 ≤ 2 次点击</h3>
+        <p>仲裁员一天要处理几十上百个要素，多点一次就是多一次出错机会。凡是需要重复的操作，一律做批量、做快捷键、做就近操作。</p>
+      </div>
+      <div class="pr-note">专业工具的体验好坏，取决于第 100 次使用，而不是第 1 次。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 主流程 ============ -->
+<section id="flow" class="wrap">
+  <div class="sec-label"><b>03</b>主流程</div>
+  <h2 class="serif">一条链路，五个环节，每个环节都留人工闸门</h2>
+  <p class="lead">从一份杂乱的 PDF 卷宗，到一份可签署的裁决书草案。红色文字是这个环节"为什么必须存在"。</p>
+
+  <div class="flow">
+    <div class="step rv">
+      <div class="st">STEP 01</div>
+      <h4>建案与卷宗入库</h4>
+      <p>批量拖拽上传，自动拆分申请书、证据材料、庭审笔录；扫描件走 OCR 与版面还原，按页建立索引。</p>
+      <div class="why">先把"文件"变成"可定位的段落"，后面才谈得上引用</div>
+    </div>
+    <div class="step rv">
+      <div class="st">STEP 02</div>
+      <h4>案件要素抽取</h4>
+      <p>自动生成诉求清单、当事人关系、事实时间轴、证据索引，形成结构化"案件画像"。</p>
+      <div class="why">让不同仲裁员从同一个起点出发，而不是各读各的</div>
+    </div>
+    <div class="step rv">
+      <div class="st">STEP 03</div>
+      <h4>事实—证据碰撞</h4>
+      <p>把争议焦点与证据逐格比对，输出支持 / 矛盾 / 缺失三种状态，冲突项自动标红。</p>
+      <div class="why">把"心证"从脑子里搬到台面上，可讨论、可复核</div>
+    </div>
+    <div class="step rv">
+      <div class="st">STEP 04</div>
+      <h4>法条与类案检索</h4>
+      <p>语义 + 关键词混合召回，按法律效力加权重排，推送适用法条与相似案例。</p>
+      <div class="why">解掉"翻书查条"的低效，也解掉"同案不同裁"</div>
+    </div>
+    <div class="step rv">
+      <div class="st">STEP 05</div>
+      <h4>草案生成与审阅</h4>
+      <p>按"结论—理由—法条"三段式生成裁决书草案，分段采纳、逐段改写，改动回流成反馈。</p>
+      <div class="why">人始终是最后一道闸门，AI 永远不签字</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 关键交互 ============ -->
+<section id="interaction" class="wrap">
+  <div class="sec-label"><b>04</b>关键交互</div>
+  <h2 class="serif">四个界面决策，解决四个具体的"用不下去"</h2>
+  <p class="lead">
+    复杂系统的交互设计，不是把功能排好看，而是预判用户在第二十分钟会想放弃的那个瞬间，然后提前把它拆掉。
+  </p>
+
+  <!-- 交互 1 -->
+  <div class="ix">
+    <div class="ix-txt rv">
+      <h3><span>决策 01</span>三栏工作台：让"读、比、写"三个动作不换屏</h3>
+      <p class="qa">
+        仲裁员的真实工作循环是：读一段卷宗 → 对一条依据 → 写一句话。传统系统把这些拆成三个页面，每切换一次就丢失一次上下文。
+      </p>
+      <p class="qa">
+        <span class="q">做法</span>固定三栏：左侧卷宗树与缩略图，中间原文阅读器（要素直接高亮在原文上），右侧 AI 助手（对话 + 结构化卡片）。
+        三栏各自独立滚动，中间栏宽可拖拽。
+      </p>
+      <p class="qa">
+        <span class="q">为什么</span>栅格布局对应的是<b>认知动作</b>，不是功能模块。看完即用，用完即写，视线不离开屏幕中央。
+      </p>
+      <div style="margin-top:14px">
+        <span class="tag">卷宗树</span><span class="tag">原文高亮</span><span class="tag">上下文不丢失</span>
+      </div>
+    </div>
+
+    <div class="wf rv">
+      <div class="wf-top"><i></i><i></i><i></i><span>案件工作台 · 三栏布局</span></div>
+      <div class="wf-body">
+        <div class="pane" style="flex:0 0 108px">
+          <div class="pane-h">卷宗</div>
+          <div class="row"><span class="tick"></span><span class="ln" style="margin:0;flex:1"></span></div>
+          <div class="row"><span class="tick"></span><span class="ln s" style="margin:0"></span></div>
+          <div class="row" style="padding-left:9px"><span class="ln s" style="margin:0;width:48%"></span></div>
+          <div class="row" style="padding-left:9px"><span class="ln s" style="margin:0;width:56%"></span></div>
+          <div class="row"><span class="tick"></span><span class="ln m" style="margin:0"></span></div>
+          <div class="row"><span class="tick"></span><span class="ln s" style="margin:0"></span></div>
+        </div>
+        <div class="pane" style="flex:1">
+          <div class="pane-h">仲裁申请书 · 第 3 页 / 共 21 页</div>
+          <div class="ln m"></div>
+          <div class="ln"></div>
+          <div class="ln hl" style="width:88%"></div>
+          <div class="ln hl" style="width:54%"></div>
+          <div class="ln m"></div>
+          <div class="ln"></div>
+          <div class="ln s"></div>
+          <div class="ln hl" style="width:70%"></div>
+          <div class="ln m"></div>
+          <div class="ln"></div>
+        </div>
+        <div class="pane" style="flex:0 0 190px">
+          <div class="pane-h">AI 助手</div>
+          <div class="bubble">本案争议焦点已识别 <b style="color:#a8342a">3</b> 项，其中 1 项证据缺失</div>
+          <div class="bubble ai">申请人主张 2024-03 至 2024-08 未签书面劳动合同，请求二倍工资差额。</div>
+          <div>
+            <span class="chip b">月工资 8,000</span><span class="chip">入职 2024-03-05</span>
+            <span class="chip r">证据缺失</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 交互 2 -->
+  <div class="ix">
+    <div class="wf rv">
+      <div class="wf-top"><i></i><i></i><i></i><span>要素 ↔ 原文 双向定位</span></div>
+      <div class="wf-body" style="flex-direction:column;min-height:0">
+        <div class="pane" style="border-right:0;border-bottom:1px solid var(--line-2)">
+          <div class="pane-h">抽取结果（可点选）</div>
+          <div>
+            <span class="chip b">月工资 8,000 元</span>
+            <span class="chip">入职日期 2024-03-05</span>
+            <span class="chip">未签书面合同</span>
+            <span class="chip r">离职原因存疑</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;color:var(--ink-3);font-size:10px;letter-spacing:.1em">
+          <span style="flex:1;height:1px;background:var(--line-2)"></span>
+          <span>↓ 点击即滚屏定位 · 框选原文可反向提升为要素 ↑</span>
+          <span style="flex:1;height:1px;background:var(--line-2)"></span>
+        </div>
+        <div class="pane" style="border-right:0">
+          <div class="pane-h">原文 · 第 3 页</div>
+          <div class="ln m"></div>
+          <div class="ln"></div>
+          <div class="ln hl" style="width:76%"></div>
+          <div class="ln m"></div>
+          <div class="ln s"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ix-txt rv">
+      <h3><span>决策 02</span>要素与原文双向锚定：把"信任"做成一个动词</h3>
+      <p class="qa">
+        用户第一次看到"月工资 8,000 元"这张卡片时，第一反应不是"真准"，而是"你从哪儿看出来的"。如果这一步答不上来，后面所有功能都白做。
+      </p>
+      <p class="qa">
+        <span class="q">做法</span>正向：点要素卡片 → 自动滚到原文对应段落并高亮，同时左侧卷宗树标记页码。
+        反向：在原文里框选任意文本 → 浮出"提升为要素"，用户可指定要素类型，直接补进结构化结果。
+      </p>
+      <p class="qa">
+        <span class="q">为什么</span>双向锚定把"验证成本"压到一次点击。用户越容易验证，就越愿意采纳；也顺带解决了模型漏抽取的人工补录问题。
+      </p>
+      <div style="margin-top:14px">
+        <span class="tag teal">一次点击验证</span><span class="tag teal">人工可补录</span><span class="tag">双向而非单向</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 交互 3 -->
+  <div class="ix">
+    <div class="ix-txt rv">
+      <h3><span>决策 03</span>事实—证据碰撞矩阵：把心证外化成一张可讨论的表</h3>
+      <p class="qa">
+        纯粹用对话做事实认定，结果是一团散落的文字，既没法复核也没法交接。仲裁庭合议时，大家需要的是同一张表。
+      </p>
+      <p class="qa">
+        <span class="q">做法</span>行是争议焦点，列是证据编号，格子三态：<b style="color:#2f6b60">支持</b> / <b style="color:#a8342a">矛盾</b> / 缺失。
+        点格子直接跳到该份证据原文；整列全空自动汇总成"证据缺失提示"。
+      </p>
+      <p class="qa">
+        <span class="q">为什么</span>表格是最低成本的对齐工具。它同时是三重产物：仲裁员的自检清单、合议时的讨论底稿、二审复核时的说明材料。
+      </p>
+      <div style="margin-top:14px">
+        <span class="tag red">冲突项标红</span><span class="tag">三态语义</span><span class="tag">可直接进合议</span>
+      </div>
+    </div>
+
+    <div class="wf rv">
+      <div class="wf-top"><i></i><i></i><i></i><span>事实—证据碰撞</span></div>
+      <div class="wf-body" style="flex-direction:column;min-height:0;padding:12px">
+        <table class="mx">
+          <thead>
+            <tr>
+              <th>争议焦点</th><th>证1<br>合同</th><th>证2<br>工资流水</th><th>证3<br>考勤</th><th>证4<br>聊天记录</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="text-align:left;padding-left:4px">劳动关系存续期间</td><td class="ok">✓</td><td class="ok">✓</td><td class="bad">✕</td><td class="ok">✓</td></tr>
+            <tr><td style="text-align:left;padding-left:4px">月工资标准</td><td class="na">—</td><td class="ok focus">✓</td><td class="na">—</td><td class="bad">✕</td></tr>
+            <tr><td style="text-align:left;padding-left:4px">未签书面劳动合同</td><td class="bad">✕</td><td class="na">—</td><td class="na">—</td><td class="ok">✓</td></tr>
+            <tr><td style="text-align:left;padding-left:4px">离职原因</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">缺失</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:9px;font-size:9.5px;color:#a8342a">⚠ 焦点「离职原因」四项证据均无支撑，已列入待补证提示</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 交互 4 -->
+  <div class="ix">
+    <div class="wf rv">
+      <div class="wf-top"><i></i><i></i><i></i><span>裁决书草案 · 分块审阅</span></div>
+      <div class="wf-body" style="flex-direction:column;min-height:0;padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+          <span style="font-size:10px;letter-spacing:.1em;color:var(--ink-3)">已确认 3 / 12 段</span>
+          <span style="font-size:9.5px;color:var(--ink-3)">进度 25%</span>
+        </div>
+        <div class="blk done">
+          <span class="no">01</span>
+          <span class="txt"><span class="ln s" style="margin:0"></span></span>
+          <span class="acts"><i></i><i></i><i></i></span>
+        </div>
+        <div class="blk done">
+          <span class="no">02</span>
+          <span class="txt"><span class="ln m" style="margin:0"></span></span>
+          <span class="acts"><i></i><i></i><i></i></span>
+        </div>
+        <div class="blk">
+          <span class="no">03</span>
+          <span class="txt">
+            <span class="ln" style="margin:0 0 5px"></span>
+            <span style="font-size:8.5px;color:var(--ink-3)">依据：劳动合同法第 82 条<span class="src">卷 3 页 12</span><span class="src">证 2</span></span>
+          </span>
+          <span class="acts"><i></i><i></i><i></i></span>
+        </div>
+        <div class="blk">
+          <span class="no">04</span>
+          <span class="txt"><span class="ln s" style="margin:0"></span></span>
+          <span class="acts"><i></i><i></i><i></i></span>
+        </div>
+        <div style="margin-top:8px;font-size:9.5px;color:var(--ink-3)">每段右侧：采纳 / 改写 / 删除</div>
+      </div>
+    </div>
+
+    <div class="ix-txt rv">
+      <h3><span>决策 04</span>分块采纳：把"整篇接受"的心理门槛拆碎</h3>
+      <p class="qa">
+        给一份 12 段、四千字的草案配一个"采纳"按钮，用户的心理活动只会是：要么全信，要么不用。中间没有灰度，工具就进不了工作流。
+      </p>
+      <p class="qa">
+        <span class="q">做法</span>草案按段落切开，每段自带来源角标（卷宗页码 / 证据编号 / 法条序号），逐段"采纳 / 改写 / 删除"，顶部实时显示"已确认 3/12 段"。
+        改写内容与删除动作一并回流，成为模型的偏好反馈。
+      </p>
+      <p class="qa">
+        <span class="q">为什么</span>分块把决策成本降到"这一段我认不认"，用户从"审一份文书"变成"过一遍清单"。
+        同时，被改写的段落天然就是高质量训练样本——这条链路让人工审阅顺带完成了数据飞轮。
+      </p>
+      <div style="margin-top:14px">
+        <span class="tag blue">段落级粒度</span><span class="tag blue">实时进度感</span><span class="tag red">改写即回流</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 我做了什么 ============ -->
+<section id="build" class="wrap">
+  <div class="sec-label"><b>05</b>我做了什么</div>
+  <h2 class="serif">四条线都是我自己写的：从脏数据到能用的界面</h2>
+  <p class="lead">
+    项目团队分工里，我承担的是"把想法变成能跑的系统"这一段——数据怎么洗干净、检索怎么召回、模型怎么输出结构化结果、界面怎么让人敢用。
+  </p>
+
+  <div class="works">
+    <div class="work rv">
+      <div class="role">Data</div>
+      <h4>数据清洗与标注体系</h4>
+      <ul>
+        <li>处理 PDF / 扫描件 / Word 混合卷宗：版面还原、页眉页脚与印章噪声剔除、按诉求与事实分段</li>
+        <li>设计案件要素 schema（当事人 / 时间 / 金额 / 诉求类型 / 事实 / 证据），统一不同卷宗的表达差异</li>
+        <li>敏感字段脱敏与访问控制，满足内网数据合规要求</li>
+      </ul>
+    </div>
+    <div class="work rv">
+      <div class="role">Model</div>
+      <h4>模型训练与输出约束</h4>
+      <ul>
+        <li>构建 SFT 样本：以历史裁决书与改写记录为语料，按"结论—理由—法条"三段式组织</li>
+        <li>输出走 JSON schema 强约束，字段缺失或引用不合法时自动重试与降级，避免"看起来对但没法用"</li>
+        <li>把仲裁员的改写 / 删除行为回收成偏好数据，形成持续迭代闭环</li>
+      </ul>
+    </div>
+    <div class="work rv">
+      <div class="role">Backend</div>
+      <h4>后端链路</h4>
+      <ul>
+        <li>卷宗上传与异步解析服务：分批任务队列，大文件不阻塞、失败可重入</li>
+        <li>检索服务：向量语义召回 + BM25 关键词召回，按法律效力加权重排</li>
+        <li>问答编排：多轮对话状态管理、工具调用、结果结构化落库与版本留痕</li>
+      </ul>
+    </div>
+    <div class="work rv">
+      <div class="role">Frontend</div>
+      <h4>前端交互实现</h4>
+      <ul>
+        <li>三栏工作台：卷宗树、原文阅读器与 AI 面板独立滚动，栏宽可拖拽</li>
+        <li>要素高亮与双向定位、碰撞矩阵、草案分块审阅的完整交互实现</li>
+        <li>长文档渲染性能优化：按页虚拟滚动，2 万字卷宗翻页不卡顿</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 佐证 ============ -->
+<section id="proof" class="wrap">
+  <div class="sec-label"><b>06</b>落地与佐证</div>
+  <h2 class="serif">不是课程作业：有专利、有奖项、有真实业务场景</h2>
+  <p class="lead">以下信息均可公开查证，链接附在条目上。</p>
+
+  <div class="tl">
+    <div class="tl-item rv">
+      <div class="tl-date">2024.06</div>
+      <h4>项目启动</h4>
+      <p>苏州科技大学虚拟现实实验室与昆山市周市镇人民政府合作立项，面向基层劳动仲裁场景做智能化辅助。</p>
+    </div>
+    <div class="tl-item key rv">
+      <div class="tl-date">2024.11.13</div>
+      <h4>苏州市人社局召开仲裁人工智能项目评估及成果展示会</h4>
+      <p>报道显示，苏州人社局围绕案件要素智能分解、证据结构化及关联分析、庭审智能语义分析、知识库结构模型、智能辅助审理搭建架构，<b>现场用实体案例做测试</b>。这五个环节与本项目的模块划分一一对应——说明这条路在 2024 年底就已经被推到"实体案例验证"阶段，而不是停留在 demo。
+        <a href="https://www.clssn.com/2024/11/13/9935692.html" target="_blank" rel="noopener">中国劳动保障报 ↗</a>
+      </p>
+    </div>
+    <div class="tl-item key rv">
+      <div class="tl-date">2025.03.20</div>
+      <h4>"大模型辅助智慧劳动仲裁"被列为校地合作重点方向</h4>
+      <p>周市镇与苏科大区块链产业学院产学研合作会议，明确围绕低碳环保、数字人、康复医疗、低空经济及大模型辅助智慧劳动仲裁等方向合作。
+        <a href="https://blc.usts.edu.cn/info/1092/4818.htm" target="_blank" rel="noopener">校方通稿 ↗</a>
+      </p>
+    </div>
+    <div class="tl-item key rv">
+      <div class="tl-date">2025.08.16</div>
+      <h4>「智裁明镜」获全国人工智能应用场景创新挑战赛二等奖</h4>
+      <p>第三届全国人工智能应用场景创新挑战赛（呼和浩特）种子组二等奖，与清华、北大等 115 支高校及企业团队同场竞技。
+        <a href="http://mp.weixin.qq.com/s?__biz=MzkzMjM4NzA5MQ==&amp;mid=2247496626&amp;idx=1&amp;sn=ab36c61101733ec9f03f8013e5934029" target="_blank" rel="noopener">学院喜报 ↗</a>
+      </p>
+    </div>
+    <div class="tl-item key rv">
+      <div class="tl-date">2025.09.04</div>
+      <h4>联合申请发明专利《劳动仲裁智能辅助系统及方法》</h4>
+      <p>申请人：昆山市数据局、苏州科技大学；公开号 CN121169628A，2025-12-19 公开。技术方案涵盖卷宗预处理、法条混合检索与事实对应、大模型裁决书生成、RLHF 反馈优化四个模块。
+        <a href="https://patents.google.com/patent/CN121169628A/zh" target="_blank" rel="noopener">专利原文 ↗</a>
+      </p>
+    </div>
+    <div class="tl-item rv">
+      <div class="tl-date">2026.03</div>
+      <h4>昆山仲裁院获评"2025 年全省劳动人事争议智能仲裁院"</h4>
+      <p>昆山市人社局 2025 年度法治政府建设情况报告：持续推进"智慧仲裁"建设，市劳动人事争议仲裁院获评全省智能仲裁院。
+        <a href="https://www.ks.gov.cn/kss/c113019/202603/ee597d5d995a43f894096b06a91d1d43.shtml" target="_blank" rel="noopener">政府公报 ↗</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="sec-label" style="margin-top:46px"><b>截图</b>公开信源留存</div>
+  <p class="lead" style="margin-bottom:18px">以下为公开报道与官方名单的原始截图，可直接核对；点标题可跳原文。</p>
+
+  <div class="proof">
+    <figure>
+      <img src="证据截图/01-CICAS全国赛获奖名单-智裁明镜二等奖.png" alt="CICAS 获奖名单截图" loading="lazy">
+      <figcaption>
+        <b>第三届全国 AI 应用场景创新挑战赛 · 专题晋级赛获奖名单</b>
+        <span>智能司法场景赛 / 苏州科技大学 / 二等奖（红框为原文标注）<br>
+        <a href="https://static.cicas.cn/storage/editor/2026/01/2026010618_1c37beec49a341e2a209b0b571a9e0b0.pdf" target="_blank" rel="noopener">static.cicas.cn 官方 PDF ↗</a></span>
+      </figcaption>
+    </figure>
+
+    <figure>
+      <img src="证据截图/02-苏州人社局-仲裁AI成果展示会-中国劳动保障报.png" alt="苏州人社局成果展示会报道截图" loading="lazy">
+      <figcaption>
+        <b>中国劳动保障报 · 2024-11-13</b>
+        <span>苏州市人社局召开仲裁人工智能项目评估及成果展示会，现场以实体案例测试<br>
+        <a href="https://www.clssn.com/2024/11/13/9935692.html" target="_blank" rel="noopener">clssn.com 原文 ↗</a></span>
+      </figcaption>
+    </figure>
+
+    <figure>
+      <img src="证据截图/03-昆山人社局报告-2025全省智能仲裁院.png" alt="昆山人社局报告截图" loading="lazy">
+      <figcaption>
+        <b>昆山市人社局 2025 年度法治政府建设情况报告 · 2026-03-16</b>
+        <span>"大力推进智慧仲裁建设，市劳动人事争议仲裁院获评 2025 年全省劳动人事争议智能仲裁院"<br>
+        <a href="https://www.ks.gov.cn/kss/c113019/202603/ee597d5d995a43f894096b06a91d1d43.shtml" target="_blank" rel="noopener">ks.gov.cn 公报 ↗</a></span>
+      </figcaption>
+    </figure>
+
+    <figure>
+      <img src="证据截图/04-挑战杯人工智能专项赛公示-南财.png" alt="挑战杯公示截图" loading="lazy">
+      <figcaption>
+        <b>第十九届"挑战杯""人工智能+"专项赛 · 跨校参赛公示</b>
+        <span>申报单位苏州科技大学，项目名《智"裁"明镜——人工智能辅助劳动仲裁决策系统》<br>
+        <a href="https://tw.nufe.edu.cn/info/1042/11492.htm" target="_blank" rel="noopener">公示原文 ↗</a></span>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+<section id="transfer" class="wrap">
+  <div class="sec-label"><b>07</b>范式迁移</div>
+  <h2 class="serif">同一套交互范式，换个领域依然成立</h2>
+  <p class="lead">
+    做完这个项目我最大的收获，不是"会调大模型"，而是摸清了一类系统的通用骨架：<b>AI 先出候选，专家低成本审阅，修正回流成数据</b>。
+    任何"专业判断 + 大量非结构化材料"的场景，都是同一道题。
+  </p>
+
+  <div class="quote rv">
+    <p>
+      建筑病害巡检本质上也是这件事：无人机与点云先给出缺陷候选框，标注员或工程师只需要"审阅—修正—确认"，
+      误检漏检回流再训练。把人放在回路里，而不是把人替换掉——这条原则在仲裁院成立，在工地同样成立。
+    </p>
+    <div class="by">设计方法可迁移性</div>
+  </div>
+
+  <div class="grid g3 rv" style="margin-top:16px">
+    <div class="card">
+      <h3>候选而非结论</h3>
+      <p>病害框、提取要素、生成段落，本质都是"待确认的建议"。界面语言必须让用户一眼看出这一点。</p>
+    </div>
+    <div class="card">
+      <h3>审阅成本决定采纳率</h3>
+      <p>一次点击能验证、一次点击能修改，用户才会用。验证路径超过两步，再准的模型也会被绕过。</p>
+    </div>
+    <div class="card">
+      <h3>修正即标注</h3>
+      <p>专业用户的每一次改动都是最贵的标注数据。产品设计时就要把"改动"结构化地存下来。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-in">
+      <div>
+        <div class="name serif">马誉洲</div>
+        <div class="sub">苏州科技大学 · 计算机科学与技术 · 2027 届</div>
+      </div>
+      <div class="contact">
+        <div>859790166@qq.com</div>
+        <div>微信：s17155164097</div>
+      </div>
+    </div>
+    <div class="disclaim">
+      说明：本页为项目设计与个人工作说明，界面部分为交互线框示意，非系统真实截图；项目涉及的卷宗内容均为脱敏示意数据。
+      专利与获奖信息来自公开渠道，本人为项目开发成员。
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var prog = document.getElementById('prog');
+  function onScroll(){
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    prog.style.width = (max > 0 ? (h.scrollTop / max * 100) : 0) + '%';
+  }
+  document.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  var els = document.querySelectorAll('.rv');
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, {threshold:0.12, rootMargin:'0px 0px -40px 0px'});
+    els.forEach(function(el){ io.observe(el); });
+  } else {
+    els.forEach(function(el){ el.classList.add('in'); });
+  }
+})();
+</script>
+</body>
+</html>
